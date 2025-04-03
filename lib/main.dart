@@ -16,7 +16,6 @@ void main() async {
   if (Platform.isAndroid || Platform.isIOS) {
     await Firebase.initializeApp();
   }
-
   await FirebaseService.signInAnonymously();
 
   runApp(
