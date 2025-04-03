@@ -41,6 +41,18 @@ class Movie {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'overview': overview,
+      'poster_path': posterPath,
+      'vote_average': voteAverage,
+      'release_date': releaseDate,
+      'genre_ids': genreIds,
+    };
+  }
+
   String get fullPosterUrl {
     return posterPath != null
         ? '${ApiConstants.imageBaseUrl}$posterPath'
