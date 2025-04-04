@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/movie.dart';
 import '../models/category.dart';
 import '../widgets/movie_card.dart';
+import '../services/movie_service.dart';
+import '../services/firebase_service.dart';
 
-class HomeScreen extends StatelessWidget {
-  HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
-  final List<Movie> featuredMovies = [
-    Movie(
-      id: 1,
-      title: 'Featured Movie 1',
-      imageUrl: 'assets/placeholder.jpg',
-      rating: 4.5,
-    ),
-    Movie(
-      id: 2,
-      title: 'Featured Movie 2',
-      imageUrl: 'assets/placeholder.jpg',
-      rating: 4.2,
-    ),
-  ];
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<Movie> _movies = [];
+  List<Movie> _featuredMovies = [];
+  bool _isLoading = true;
+  String? _error;
 
   final List<Category> categories = [
     Category(id: 1, name: 'Action'),
@@ -28,71 +26,38 @@ class HomeScreen extends StatelessWidget {
     Category(id: 4, name: 'Sci-Fi'),
   ];
 
-  final List<Movie> popularMovies = [
-    Movie(
-      id: 1,
-      title: 'Movie 1',
-      imageUrl: 'assets/placeholder.jpg',
-      year: 2023,
-      rating: 4.0,
-    ),
-    Movie(
-      id: 2,
-      title: 'Movie 2',
-      imageUrl: 'assets/placeholder.jpg',
-      year: 2023,
-      rating: 3.8,
-    ),
-    Movie(
-      id: 3,
-      title: 'Movie 3',
-      imageUrl: 'assets/placeholder.jpg',
-      year: 2022,
-      rating: 4.2,
-    ),
-    Movie(
-      id: 4,
-      title: 'Movie 4',
-      imageUrl: 'assets/placeholder.jpg',
-      year: 2021,
-      rating: 3.5,
-    ),
-  ];
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Movie Catalog'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite),
-            onPressed: () {
-              Navigator.pushNamed(context, '/favorites');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: Implementar búsqueda
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Películas Destacadas'),
-            _buildFeaturedMovies(),
-            _buildSectionTitle('Categorías'),
-            _buildCategoryList(),
-            _buildSectionTitle('Películas Populares'),
-            _buildMovieGrid(),
-          ],
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    _loadMovies();
+  }
+
+  Future<void> _loadMovies() async {
+    final movieService = Provider.of<MovieService>(context, listen: false);
+    final response = await movieService.getPopularMovies();
+
+    setState(() {
+      _isLoading = false;
+      if (response.success) {
+        _movies = response.data!;
+        _featuredMovies = response.data!.take(2).toList();
+      } else {
+        _error = response.error ?? 'Error desconocido';
+      }
+    });
+  }
+
+  Future<void> _saveFavorite(Movie movie) async {
+    try {
+      await FirebaseService.saveFavorite(movie);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Película añadida a favoritos')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar: ${e.toString()}')),
+      );
+    }
   }
 
   Widget _buildSectionTitle(String title) {
@@ -113,9 +78,9 @@ class HomeScreen extends StatelessWidget {
       height: 220,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: featuredMovies.length,
+        itemCount: _featuredMovies.length,
         itemBuilder: (context, index) {
-          final movie = featuredMovies[index];
+          final movie = _featuredMovies[index];
           return GestureDetector(
             onTap: () {
               Navigator.pushNamed(
@@ -130,6 +95,7 @@ class HomeScreen extends StatelessWidget {
               child: MovieCard(
                 movie: movie,
                 isFeatured: true,
+                onFavoritePressed: () => _saveFavorite(movie),
               ),
             ),
           );
@@ -175,9 +141,9 @@ class HomeScreen extends StatelessWidget {
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
       ),
-      itemCount: popularMovies.length,
+      itemCount: _movies.length,
       itemBuilder: (context, index) {
-        final movie = popularMovies[index];
+        final movie = _movies[index];
         return GestureDetector(
           onTap: () {
             Navigator.pushNamed(
@@ -186,9 +152,79 @@ class HomeScreen extends StatelessWidget {
               arguments: {'movieId': movie.id},
             );
           },
-          child: MovieCard(movie: movie),
+          child: MovieCard(
+            movie: movie,
+            onFavoritePressed: () => _saveFavorite(movie),
+          ),
         );
       },
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_error!, style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _loadMovies,
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Movie Catalog'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            onPressed: () {
+              Navigator.pushNamed(context, '/favorites');
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              // TODO: Implementar búsqueda
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadMovies,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Películas Destacadas'),
+            _buildFeaturedMovies(),
+            _buildSectionTitle('Categorías'),
+            _buildCategoryList(),
+            _buildSectionTitle('Películas Populares'),
+            _buildMovieGrid(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class Category {
+  final int id;
+  final String name;
+
+  Category({required this.id, required this.name});
 }
