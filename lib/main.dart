@@ -1,20 +1,33 @@
 import 'package:flutter/material.dart';
+import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/movie_detail_screen.dart';
+import 'screens/category_screen.dart';
+import 'screens/favorites_screen.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const MovieCatalogApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MovieCatalogApp extends StatelessWidget {
+  const MovieCatalogApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MaterialApp(
+      title: 'Movie Catalog',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/home': (context) => HomeScreen(),
+        '/movie': (context) => const MovieDetailScreen(),
+        '/category': (context) =>  CategoryScreen(),
+        '/favorites': (context) => FavoritesScreen(),
+      },
     );
   }
 }
