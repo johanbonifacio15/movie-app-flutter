@@ -8,6 +8,11 @@ class Movie {
   final double voteAverage;
   final String releaseDate;
   final List<int> genreIds;
+  final String? imageUrl;
+  final int? year;
+  final String? duration;
+  final String? director;
+  final List<String>? cast;
 
   Movie({
     required this.id,
@@ -17,6 +22,11 @@ class Movie {
     required this.voteAverage,
     required this.releaseDate,
     required this.genreIds,
+    this.imageUrl,
+    this.year,
+    this.duration,
+    this.director,
+    this.cast,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
@@ -38,6 +48,15 @@ class Movie {
       voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
       releaseDate: json['release_date'] as String? ?? '',
       genreIds: parseGenres(json['genre_ids']),
+      imageUrl: json['imageUrl'] as String?,
+      year: json['year'] != null 
+          ? int.tryParse(json['year'].toString()) 
+          : null,
+      duration: json['duration'] as String?,
+      director: json['director'] as String?,
+      cast: json['cast'] != null 
+          ? List<String>.from(json['cast']) 
+          : null,
     );
   }
 
@@ -50,12 +69,17 @@ class Movie {
       'vote_average': voteAverage,
       'release_date': releaseDate,
       'genre_ids': genreIds,
+      'imageUrl': imageUrl,
+      'year': year,
+      'duration': duration,
+      'director': director,
+      'cast': cast,
     };
   }
 
   String get fullPosterUrl {
     return posterPath != null
         ? '${ApiConstants.imageBaseUrl}$posterPath'
-        : 'https://via.placeholder.com/200x300?text=No+Poster';
+        : imageUrl ?? 'https://via.placeholder.com/200x300?text=No+Poster';
   }
 }
