@@ -1,40 +1,89 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/movie.dart';
 import '../widgets/movie_card.dart';
+import '../services/movie_service.dart';
 
-class CategoryScreen extends StatelessWidget {
-  // Constructor ya no es const porque tenemos campos no constantes
-  CategoryScreen({super.key});
+class CategoryScreen extends StatefulWidget {
+  final int categoryId;
+  final String categoryName;
 
-  // Datos de ejemplo como campos finales (no const)
-  final String categoryName = 'Categoría nombre';
+  const CategoryScreen({
+    super.key,
+    required this.categoryId,
+    required this.categoryName,
+  });
 
-  final List<Movie> movies = [
-    Movie(
-      id: 1,
-      title: 'Película 1',
-      imageUrl: 'assets/placeholder.jpg',
-      year: 2023,
-      rating: 4.0,
-    ),
-    Movie(
-      id: 2,
-      title: 'Película 2',
-      imageUrl: 'assets/placeholder.jpg',
-      year: 2023,
-      rating: 3.8,
-    ),
-  ];
+  @override
+  State<CategoryScreen> createState() => _CategoryScreenState();
+}
+
+class _CategoryScreenState extends State<CategoryScreen> {
+  late List<Movie> movies = [];
+  bool isLoading = true;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMovies();
+  }
+
+  Future<void> _loadMovies() async {
+    final movieService = Provider.of<MovieService>(context, listen: false);
+
+    try {
+      final response = await movieService.getMoviesByCategory(
+        widget.categoryId,
+      );
+      if (response.success) {
+        setState(() {
+          movies = response.data!;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          error = response.error ?? 'Error al cargar películas';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        error = 'Error de conexión: ${e.toString()}';
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final categoryId = args['categoryId'] as int;
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.categoryName)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (error != null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.categoryName)),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(error!),
+              ElevatedButton(
+                onPressed: _loadMovies,
+                child: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(categoryName),
-      ),
+      appBar: AppBar(title: Text(widget.categoryName)),
       body: GridView.builder(
         padding: const EdgeInsets.all(8),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

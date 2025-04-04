@@ -1,4 +1,4 @@
-import '../constants/api_constants.dart';
+import 'package:movie_app_flutter/constants/api_constants.dart';
 
 class Movie {
   final int id;
@@ -13,6 +13,7 @@ class Movie {
   final String? duration;
   final String? director;
   final List<String>? cast;
+  final double? rating;
 
   Movie({
     required this.id,
@@ -27,6 +28,7 @@ class Movie {
     this.duration,
     this.director,
     this.cast,
+    this.rating,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
@@ -49,14 +51,11 @@ class Movie {
       releaseDate: json['release_date'] as String? ?? '',
       genreIds: parseGenres(json['genre_ids']),
       imageUrl: json['imageUrl'] as String?,
-      year: json['year'] != null 
-          ? int.tryParse(json['year'].toString()) 
-          : null,
+      year: json['year'] != null ? int.tryParse(json['year'].toString()) : null,
       duration: json['duration'] as String?,
       director: json['director'] as String?,
-      cast: json['cast'] != null 
-          ? List<String>.from(json['cast']) 
-          : null,
+      cast: json['cast'] != null ? List<String>.from(json['cast']) : null,
+      rating: (json['rating'] as num?)?.toDouble(),
     );
   }
 
@@ -74,6 +73,7 @@ class Movie {
       'duration': duration,
       'director': director,
       'cast': cast,
+      'rating': rating,
     };
   }
 

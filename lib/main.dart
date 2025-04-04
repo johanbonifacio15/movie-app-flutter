@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -16,7 +15,6 @@ import 'services/firebase_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicialización condicional de Firebase
   if (Platform.isAndroid || Platform.isIOS) {
     await Firebase.initializeApp();
     await FirebaseService.signInAnonymously();
@@ -51,10 +49,72 @@ class MovieCatalogApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
-        '/movie': (context) => const MovieDetailScreen(),
-        '/category': (context) => const CategoryScreen(),
         '/favorites': (context) => const FavoritesScreen(),
       },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/movie') {
+          final args = settings.arguments as Map<String, dynamic>? ?? {};
+          if (args['movieId'] == null) {
+            return _buildErrorRoute('Falta el ID de la película');
+          }
+          return MaterialPageRoute(
+            builder:
+                (context) => MovieDetailScreen(movieId: args['movieId'] as int),
+          );
+        }
+
+        if (settings.name == '/category') {
+          final args = settings.arguments as Map<String, dynamic>? ?? {};
+          if (args['categoryId'] == null) {
+            return _buildErrorRoute('Falta el ID de categoría');
+          }
+          if (args['categoryName'] == null) {
+            return _buildErrorRoute('Falta el nombre de categoría');
+          }
+          return MaterialPageRoute(
+            builder:
+                (context) => CategoryScreen(
+                  categoryId: args['categoryId'] as int,
+                  categoryName: args['categoryName'] as String,
+                ),
+          );
+        }
+
+        return null;
+      },
+    );
+  }
+
+  MaterialPageRoute _buildErrorRoute(String message) {
+    return MaterialPageRoute(
+      builder:
+          (context) => Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 50, color: Colors.red),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Error de navegación',
+                    style: TextStyle(fontSize: 20, color: Colors.red[700]),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    style: const TextStyle(fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Volver'),
+                  ),
+                ],
+              ),
+            ),
+          ),
     );
   }
 }

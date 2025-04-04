@@ -20,10 +20,12 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _error;
 
   final List<Category> categories = [
-    Category(id: 1, name: 'Action'),
-    Category(id: 2, name: 'Comedy'),
-    Category(id: 3, name: 'Drama'),
-    Category(id: 4, name: 'Sci-Fi'),
+    Category(id: 28, name: 'Acción'),
+    Category(id: 35, name: 'Comedia'),
+    Category(id: 18, name: 'Drama'),
+    Category(id: 878, name: 'Ciencia Ficción'),
+    Category(id: 27, name: 'Terror'),
+    Category(id: 10749, name: 'Romance'),
   ];
 
   @override
@@ -65,10 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -120,7 +119,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pushNamed(
                   context,
                   '/category',
-                  arguments: {'categoryId': category.id},
+                  arguments: {
+                    'categoryId': category.id,
+                    'categoryName': category.name, // Añadido este parámetro
+                  },
                 );
               },
             ),
@@ -199,10 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // TODO: Implementar búsqueda
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadMovies,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadMovies),
         ],
       ),
       body: SingleChildScrollView(
@@ -220,11 +219,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-class Category {
-  final int id;
-  final String name;
-
-  Category({required this.id, required this.name});
 }

@@ -46,6 +46,25 @@ class FirebaseService {
     }
   }
 
+  static Future<void> removeFavorite(Movie movie) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('favorites')
+            .doc(movie.id.toString())
+            .delete();
+      }
+    } catch (e) {
+      debugPrint('Error removing favorite: $e');
+      rethrow;
+    }
+  }
+
   static Future<List<Movie>> getFavorites() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {

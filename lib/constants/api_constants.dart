@@ -7,9 +7,10 @@ class ApiConstants {
 
   // Endpoints
   static const String popularMovies = '/movie/popular';
-  static const String movieDetails = '/movie/{id}';
+  static const String movieDetails = '/movie';
   static const String searchMovies = '/search/movie';
   static const String genres = '/genre/movie/list';
+  static const String discoverMovies = '/discover/movie';
 
   // Parametros
   static const Map<String, String> defaultParams = {
